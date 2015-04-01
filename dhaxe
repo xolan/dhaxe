@@ -37,8 +37,10 @@ Options:
 
 import os
 import sh
+import subprocess
 import logging
 import logging.handlers
+import json
 from sh import docker
 from docopt import docopt
 
@@ -96,7 +98,15 @@ def clean(run=1):
 def do(command):
     global logger
     logger.info("Running command \"%s\" in container \"dhaxe\"" % command)
-    docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', *command,  _out=process_output, _err=process_output)
+    p = ('docker run' +
+         ' --name="dhaxe"' +
+         ' --rm' +
+         ' --volume="%s:/tmp/haxe"' % os.getcwd() +
+         ' --workdir="/tmp/haxe"' +
+         ' xolan/dhaxe' +
+         ' ' + ' '.join(command)
+        )
+    subprocess.call(p, shell=True)
 
 def set_up_logging():
     logFormatter = logging.Formatter('%(asctime)s %(pathname)s [%(process)d]: [%(levelname)-5.5s] %(message)s')
@@ -183,4 +193,5 @@ logger = set_up_logging()
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='xolan/dhaxe')
+    logger.info("Arguments: %s" % json.dumps(arguments))
     handle(arguments)
