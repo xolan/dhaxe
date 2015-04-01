@@ -24,6 +24,11 @@ Usage:
     dhaxe (-h | --help)
     dhaxe generate-readme
 
+Examples:
+    dhaxe clean
+    dhaxe build --author=xolan
+    dhaxe do haxelib run flixel-tools td
+
 Options:
     stop                 Stops all running containers
     rm                   Remove all containers
