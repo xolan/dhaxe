@@ -12,6 +12,11 @@ Usage:
     dhaxe (-h | --help)
     dhaxe generate-readme
 
+Examples:
+    dhaxe clean
+    dhaxe build --author=xolan
+    dhaxe do haxelib run flixel-tools td
+
 Options:
     stop                 Stops all running containers
     rm                   Remove all containers
@@ -39,48 +44,48 @@ def process_output(line, std, process):
 
 def stop():
     global logger
-    logger.info("Stopping running containers")
+    logger.info("-- Stopping running containers")
     for line in docker('ps', '-q', _iter=True):
-        logger.info("-- Stopping container: %s" % line.rstrip())
+        logger.info("   -- Stopping container: %s" % line.rstrip())
         try:
             docker('stop', line.rstrip())
         except sh.ErrorReturnCode_1 as e:
             logger.error(e)
             pass
-    logger.info("Finished stopping running containers")
+    logger.info("-- Finished stopping running containers")
 
 def rm():
     global logger
-    logger.info("Removing containers")
+    logger.info("-- Removing containers")
     for line in docker('ps', '-a', '-q', _iter=True):
-        logger.info("-- Removing container: %s" % line.rstrip())
+        logger.info("   -- Removing container: %s" % line.rstrip())
         try:
             docker('rm', line.rstrip())
         except sh.ErrorReturnCode_1 as e:
             logger.error(e)
             pass
-    logger.info("Finished removing containers")
+    logger.info("-- Finished removing containers")
 
 def rmi():
     global logger
-    logger.info("Removing images")
+    logger.info("-- Removing images")
     for line in docker('images', '-a', '-q', _iter=True):
-        logger.info("-- Removing image: %s" % line.rstrip())
+        logger.info("   -- Removing image: %s" % line.rstrip())
         try:
             docker('rmi', line.rstrip())
         except sh.ErrorReturnCode_1 as e:
             logger.error(e)
             pass
-    logger.info("Finished removing images")
+    logger.info("-- Finished removing images")
 
-def clean(run=0):
+def clean(run=1):
     global logger
-    logger.info("Cleaning docker containers and images")
+    logger.info("Cleaning docker containers and images (pass #%d)" % run)
     stop()
     rm()
     rmi()
-    if run == 0:
-        clean(run=1)
+    if run == 1:
+        clean(run=2)
     else:
         logger.info("Finished cleaning")
 
@@ -154,9 +159,9 @@ def handle(arguments):
         docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', 'haxe', _out=process_output, _err=process_output)
 
     if arguments['do']:
-        command = ' '.join(arguments['<command>'])
+        command = arguments['<command>']
         logger.info("Running command \"%s\" in container \"dhaxe\"" % command)
-        docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', command,  _out=process_output, _err=process_output)
+        docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', *command,  _out=process_output, _err=process_output)
 
     if arguments['generate-readme']:
         generate_readme()

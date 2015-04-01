@@ -21,6 +21,11 @@ RUN yes|haxelib run openfl setup
 RUN haxelib install flixel
 RUN haxelib install flixel-tools
 
+# Install Nape, Systools, Spinehx
+RUN haxelib install nape ; \
+    haxelib install systools ; \
+    haxelib install spinehx ; \
+
 ADD source_me.sh ./
 RUN chmod +x source_me.sh ; \
     . ./source_me.sh ; \
