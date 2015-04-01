@@ -8,6 +8,8 @@ Java and C# target support is also provided.
 
 ## Usage
 
+Before using the dhaxe utility script, install the required Python packages using pip; `pip install -r requirements.txt`
+
 ```rst
 dhaxe
 
@@ -28,8 +30,8 @@ Options:
     rmi                  Remove all images
     clean                Stops and removes all containers and images
     build                Builds the docker image
-        --author=<name>
-    run                  Run
+        --author=<name>      This variable will be used for templates created
+    run                  Run haxe - Same as "do haxe <command>"
     do <command>         Execute <command> on the container
     (-h | --help)        Show help
     generate-readme      Generate README.md

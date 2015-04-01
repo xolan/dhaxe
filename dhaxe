@@ -19,7 +19,7 @@ Options:
     clean                Stops and removes all containers and images
     build                Builds the docker image
         --author=<name>      This variable will be used for templates created
-    run                  Run
+    run                  Run haxe - Same as "do haxe <command>"
     do <command>         Execute <command> on the container
     (-h | --help)        Show help
     generate-readme      Generate README.md
@@ -146,6 +146,7 @@ def handle(arguments):
             f.write("export DHAXE_AUTHOR=" + arguments['--author'])
         docker('build', '--rm', '--tag="xolan/dhaxe:latest"', './', _out=process_output)
         logger.info("Finished building docker image \"%s\"" % "xolan/dhaxe:latest")
+        os.remove('source_me.sh')
 
     if arguments['run']:
         docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', 'haxe', _out=process_output, _err=process_output)
