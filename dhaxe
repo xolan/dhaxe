@@ -18,7 +18,7 @@ Options:
     rmi                  Remove all images
     clean                Stops and removes all containers and images
     build                Builds the docker image
-        --author=<name>
+        --author=<name>      This variable will be used for templates created
     run                  Run
     do <command>         Execute <command> on the container
     (-h | --help)        Show help
