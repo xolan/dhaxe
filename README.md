@@ -19,6 +19,7 @@ Usage:
     dhaxe rmi
     dhaxe clean
     dhaxe build --author=<name>
+    dhaxe test
     dhaxe run
     dhaxe do <command>...
     dhaxe (-h | --help)
@@ -27,7 +28,7 @@ Usage:
 Examples:
     dhaxe clean
     dhaxe build --author=xolan
-    dhaxe do haxelib run flixel-tools td
+    dhaxe do haxelib run flixel-tools td  // dhaxe test
 
 Options:
     stop                 Stops all running containers
@@ -37,6 +38,8 @@ Options:
                          Same as "stop", "rm", "rmi" in sequence
     build                Builds the docker image
         --author=<name>      This variable will be used for templates created
+    test                 Run flixel tests
+                         Same as "do haxelib run flixel-tools td"
     run                  Run haxe
                          Same as "do haxe"
     do <command>...      Execute <command> on the container

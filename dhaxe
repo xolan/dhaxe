@@ -7,6 +7,7 @@ Usage:
     dhaxe rmi
     dhaxe clean
     dhaxe build --author=<name>
+    dhaxe test
     dhaxe run
     dhaxe do <command>...
     dhaxe (-h | --help)
@@ -15,7 +16,7 @@ Usage:
 Examples:
     dhaxe clean
     dhaxe build --author=xolan
-    dhaxe do haxelib run flixel-tools td
+    dhaxe do haxelib run flixel-tools td  // dhaxe test
 
 Options:
     stop                 Stops all running containers
@@ -25,6 +26,8 @@ Options:
                          Same as "stop", "rm", "rmi" in sequence
     build                Builds the docker image
         --author=<name>      This variable will be used for templates created
+    test                 Run flixel tests
+                         Same as "do haxelib run flixel-tools td"
     run                  Run haxe
                          Same as "do haxe"
     do <command>...      Execute <command> on the container
@@ -89,6 +92,11 @@ def clean(run=1):
     else:
         logger.info("Finished cleaning")
 
+
+def do(command):
+    global logger
+    logger.info("Running command \"%s\" in container \"dhaxe\"" % command)
+    docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', *command,  _out=process_output, _err=process_output)
 
 def set_up_logging():
     logFormatter = logging.Formatter('%(asctime)s %(pathname)s [%(process)d]: [%(levelname)-5.5s] %(message)s')
@@ -155,13 +163,18 @@ def handle(arguments):
         os.remove('source_me.sh')
         logger.info("Finished building docker image \"%s\"" % "xolan/dhaxe:latest")
 
+    if arguments['test']:
+        logger.info("Running flixel tests")
+        command = 'haxelib run flixel-tools td'.split(' ')
+        do(command)
+        logger.info("Finished running flixel tests")
+
     if arguments['run']:
         docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', 'haxe', _out=process_output, _err=process_output)
 
     if arguments['do']:
         command = arguments['<command>']
-        logger.info("Running command \"%s\" in container \"dhaxe\"" % command)
-        docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', *command,  _out=process_output, _err=process_output)
+        do(command)
 
     if arguments['generate-readme']:
         generate_readme()
