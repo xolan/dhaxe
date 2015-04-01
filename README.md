@@ -29,10 +29,12 @@ Options:
     rm                   Remove all containers
     rmi                  Remove all images
     clean                Stops and removes all containers and images
+                         Same as "stop", "rm", "rmi" in sequence
     build                Builds the docker image
         --author=<name>      This variable will be used for templates created
-    run                  Run haxe - Same as "do haxe <command>"
-    do <command>         Execute <command> on the container
+    run                  Run haxe
+                         Same as "do haxe"
+    do <command>...      Execute <command> on the container
     (-h | --help)        Show help
     generate-readme      Generate README.md
 
