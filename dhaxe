@@ -1,0 +1,165 @@
+#!/usr/bin/env python
+"""dhaxe
+
+Usage:
+    dhaxe stop
+    dhaxe rm
+    dhaxe rmi
+    dhaxe clean
+    dhaxe build --author=<name>
+    dhaxe run
+    dhaxe do <command>...
+    dhaxe (-h | --help)
+    dhaxe generate-readme
+
+Options:
+    stop                 Stops all running containers
+    rm                   Remove all containers
+    rmi                  Remove all images
+    clean                Stops and removes all containers and images
+    build                Builds the docker image
+        --author=<name>
+    run                  Run
+    do <command>         Execute <command> on the container
+    (-h | --help)        Show help
+    generate-readme      Generate README.md
+"""
+
+import os
+import sh
+import logging
+import logging.handlers
+from sh import docker
+from docopt import docopt
+
+def process_output(line, std, process):
+    print(line.rstrip())
+
+def stop():
+    global logger
+    logger.info("Stopping running containers")
+    for line in docker('ps', '-q', _iter=True):
+        logger.info("-- Stopping container: %s" % line.rstrip())
+        try:
+            docker('stop', line.rstrip())
+        except sh.ErrorReturnCode_1 as e:
+            logger.error(e)
+            pass
+    logger.info("Finished stopping running containers")
+
+def rm():
+    global logger
+    logger.info("Removing containers")
+    for line in docker('ps', '-a', '-q', _iter=True):
+        logger.info("-- Removing container: %s" % line.rstrip())
+        try:
+            docker('rm', line.rstrip())
+        except sh.ErrorReturnCode_1 as e:
+            logger.error(e)
+            pass
+    logger.info("Finished removing containers")
+
+def rmi():
+    global logger
+    logger.info("Removing images")
+    for line in docker('images', '-a', '-q', _iter=True):
+        logger.info("-- Removing image: %s" % line.rstrip())
+        try:
+            docker('rmi', line.rstrip())
+        except sh.ErrorReturnCode_1 as e:
+            logger.error(e)
+            pass
+    logger.info("Finished removing images")
+
+def clean(run=0):
+    global logger
+    logger.info("Cleaning docker containers and images")
+    stop()
+    rm()
+    rmi()
+    if run == 0:
+        clean(run=1)
+    else:
+        logger.info("Finished cleaning")
+
+
+def set_up_logging():
+    logFormatter = logging.Formatter('%(asctime)s %(pathname)s [%(process)d]: [%(levelname)-5.5s] %(message)s')
+
+    # File handler for /var/log/dhaxe.log
+    fileHandler = logging.FileHandler(os.path.join(os.getcwd(), 'dhaxe.log'))
+    fileHandler.setLevel(logging.DEBUG)
+    fileHandler.setFormatter(logFormatter)
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+
+    # Combined logger used elsewhere in the script
+    logger = logging.getLogger('dhaxe-log')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(fileHandler)
+    logger.addHandler(consoleHandler)
+
+    return logger
+
+def generate_readme():
+    output = """
+# dhaxe
+
+"dhaxe" is a simple project meant to speed up Haxe development on any environment.
+It only requires Docker to be installed, as well as Python 3+.
+
+Currently it installs Haxe, OpenFL, Flixel, Flixel-tools and their dependencies.
+Java and C# target support is also provided.
+
+## Usage
+
+Before using the dhaxe utility script, install the required Python packages using pip; `pip install -r requirements.txt`
+
+```rst
+%s
+```
+
+""".lstrip() % __doc__
+    with open('README.md', 'w+') as README:
+        README.write(output)
+
+
+def handle(arguments):
+    global logger
+
+    if arguments['stop']:
+        stop()
+
+    if arguments['rm']:
+        rm()
+
+    if arguments['rmi']:
+        rmi()
+
+    if arguments['clean']:
+        clean()
+
+    if arguments['build']:
+        logger.info("Building docker image \"%s\"" % "xolan/dhaxe:latest")
+        with open('source_me.sh', 'w+') as f:
+            f.write("export DHAXE_AUTHOR=" + arguments['--author'])
+        docker('build', '--rm', '--tag="xolan/dhaxe:latest"', './', _out=process_output)
+        logger.info("Finished building docker image \"%s\"" % "xolan/dhaxe:latest")
+
+    if arguments['run']:
+        docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', 'haxe', _out=process_output, _err=process_output)
+
+    if arguments['do']:
+        command = ' '.join(arguments['<command>'])
+        logger.info("Running command \"%s\" in container \"dhaxe\"" % command)
+        docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', command,  _out=process_output, _err=process_output)
+
+    if arguments['generate-readme']:
+        generate_readme()
+
+logger = set_up_logging()
+
+if __name__ == '__main__':
+    arguments = docopt(__doc__, version='xolan/dhaxe')
+    handle(arguments)
