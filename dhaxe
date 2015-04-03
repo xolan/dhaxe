@@ -2,6 +2,7 @@
 """dhaxe
 
 Usage:
+    dhaxe gui
     dhaxe stop
     dhaxe rm
     dhaxe rmi
@@ -19,6 +20,7 @@ Examples:
     dhaxe do haxelib run flixel-tools td  // dhaxe test
 
 Options:
+    gui                  Use Zentiy-based GUI
     stop                 Stops all running containers
     rm                   Remove all containers
     rmi                  Remove all images
@@ -95,6 +97,24 @@ def clean(run=1):
         logger.info("Finished cleaning")
 
 
+def build():
+    global logger
+    logger.info("Building docker image \"%s\"" % "xolan/dhaxe:latest")
+    with open('source_me.sh', 'w+') as f:
+        f.write("export DHAXE_AUTHOR=" + arguments['--author'])
+    docker('build', '--rm', '--tag="xolan/dhaxe:latest"', './', _out=process_output)
+    os.remove('source_me.sh')
+    logger.info("Finished building docker image \"%s\"" % "xolan/dhaxe:latest")
+
+
+def test():
+    global logger
+    logger.info("Running flixel tests")
+    command = 'haxelib run flixel-tools td'.split(' ')
+    do(command)
+    logger.info("Finished running flixel tests")
+
+
 def do(command):
     global logger
     logger.info("Running command \"%s\" in container \"dhaxe\"" % command)
@@ -150,8 +170,18 @@ Before using the dhaxe utility script, install the required Python packages usin
         README.write(output)
 
 
+def gui():
+    global logger
+    logger.warn("Command \"gui\" is not yet implemented!")
+    import sys
+    sys.exit(1)
+
+
 def handle(arguments):
     global logger
+
+    if arguments['gui']:
+        gui()
 
     if arguments['stop']:
         stop()
@@ -166,18 +196,10 @@ def handle(arguments):
         clean()
 
     if arguments['build']:
-        logger.info("Building docker image \"%s\"" % "xolan/dhaxe:latest")
-        with open('source_me.sh', 'w+') as f:
-            f.write("export DHAXE_AUTHOR=" + arguments['--author'])
-        docker('build', '--rm', '--tag="xolan/dhaxe:latest"', './', _out=process_output)
-        os.remove('source_me.sh')
-        logger.info("Finished building docker image \"%s\"" % "xolan/dhaxe:latest")
+        build()
 
     if arguments['test']:
-        logger.info("Running flixel tests")
-        command = 'haxelib run flixel-tools td'.split(' ')
-        do(command)
-        logger.info("Finished running flixel tests")
+        test()
 
     if arguments['run']:
         docker('run', '--name="dhaxe"', '--rm', '--volume="%s:/tmp/haxe"' % os.getcwd(), '--workdir="/tmp/haxe"', 'xolan/dhaxe', 'haxe', _out=process_output, _err=process_output)
@@ -192,6 +214,7 @@ def handle(arguments):
 logger = set_up_logging()
 
 if __name__ == '__main__':
+    logger.info("=== Start of log ===")
     arguments = docopt(__doc__, version='xolan/dhaxe')
-    logger.info("Arguments: %s" % json.dumps(arguments))
+    #logger.info("Arguments: %s" % json.dumps(arguments))
     handle(arguments)
